@@ -1,0 +1,91 @@
+<div class="container-fluid">
+  <!-- Page Heading -->
+  <div class="row">
+    <div class="col-lg-12">
+      <h1 class="page-header" ng-bind="mv.info.title"></h1>
+      <ol class="breadcrumb">
+        <li class="active">
+          <i class="fa fa-table"></i> Model View
+        </li>
+        <li>
+          <i class="fa fa-pencil"></i>  <a href ng-click="mv.editMode = !mv.editMode">{{mv.editMode ? "Done Editing" : "Edit"}}</a>
+        </li>
+      </ol>
+
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover" ng-class="{'table-striped': !mv.editMode}">
+          <thead>
+            <tr>
+              <th ng-repeat="key in keysOf(mv.info.properties)"
+                  ng-click="setSortingOrder(key)" class="dropdown">
+                <a data-toggle="dropdown" class="header-button">
+                  {{key}} <span class="caret button-caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a href="#">HTML</a></li>
+                  <li><a href="#">CSS</a></li>
+                  <li><a href="#">JavaScript</a></li>
+                </ul>
+
+                <!--<i style="float:right;" class="fa fa-caret-up" ng-show=" '+'+key == mv.sortingOrder[0] "></i>
+                <i style="float:right;" class="fa fa-caret-down" ng-show=" '-'+key == mv.sortingOrder[0] "></i>-->
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="row in mv.data"
+                title="{{(mv.dataStatus[$index] && mv.dataStatus[$index].error) ? mv.dataStatus[$index].errorMessage : ''}}">
+
+              <td ng-repeat="key in keysOf(mv.info.properties)"
+                  ng-class="{danger: mv.dataStatus[$parent.$index] ? mv.dataStatus[$parent.$index].error : false,
+                              warning: mv.dataStatus[$parent.$index] ? mv.dataStatus[$parent.$index].updating : false}"
+                  rowId="{{$parent.$index}}"
+                  colId="{{$index}}">
+                <div ng-show="!mv.editMode">
+                  <!-- First column is reserved for Id -->
+                  <div ng-if="$index == 0">
+                    <!-- <img src="/assets/spin.svg" style="height:20px;width:20px;">-->
+                    <span>&nbsp;&nbsp;{{row[key]}}&nbsp;&nbsp;</span>
+                  </div>
+                  <!-- All other columns -->
+                  <div ng-if="$index != 0">
+                    <span>{{row[key]}}</span>
+                  </div>
+                </div>
+
+                <div ng-show="mv.editMode">
+                  <!-- First column is reserved for Id -->
+                  <div ng-if="$index == 0">
+                    <span>&nbsp;&nbsp;{{row[key]}}&nbsp;&nbsp;</span>
+                  </div>
+                  <!-- All other columns -->
+                  <div ng-if="$index != 0">
+                    <input ng-model="row[key]" edit-field field-type="{{mv.info.properties[key]}}"
+                           ng-click="mv.initColId = $index; " ng-focus="mv.initColId = (mv.initColId > $index) ? $index : mv.initColId"
+                           ng-change="mv.dataStatus[$parent.$parent.$index] ?
+                                mv.dataStatus[$parent.$parent.$index].changed = true :
+                                mv.dataStatus[$parent.$parent.$index] = {changed: true};"
+                           onpaste="handlePaste(this, event)" />
+                    <i class="fa fa-file-excel-o input-excel-data"></i>
+                  </div>
+                </div>
+
+              </td>
+            </tr>
+
+            <tr ng-repeat="row in mv.newData">
+              <td ng-repeat="key in keysOf(mv.info.properties)" >
+
+              </td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>
+  </div>
+  <!-- /.row -->
+</div>
+<!-- /.container-fluid -->
+

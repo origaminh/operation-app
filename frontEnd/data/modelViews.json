@@ -1,0 +1,17 @@
+[
+  {
+    "title": "First View",
+    "model": "Test",
+    "route": "tests",
+    "properties": {
+      "id": "number",
+      "title": "string",
+      "amount": "number",
+      "array": "array",
+      "testDate": "datetime"
+    },
+    "limit": 30,
+    "conditions": [],
+    "hidden": false
+  }
+]

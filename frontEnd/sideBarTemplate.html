@@ -1,0 +1,26 @@
+<!-- These items collapse to the responsive navigation menu on small screens -->
+<div class="collapse navbar-collapse navbar-ex1-collapse">
+    <ul class="nav navbar-nav side-nav">
+        <!-- Normal sidebar items, upon being clicked, will toggle showing the Navbar (for mobile view only) -->
+        <li>
+            <a href="#/" ng-click="main.toggleNavbar()">
+                <i class="fa fa-fw fa-dashboard"></i> Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="#/importdata" ng-click="main.toggleNavbar()">
+                <i class="fa fa-fw fa-database"></i> Import Data
+            </a>
+        </li>
+
+        <li>
+        <a href="javascript:;" data-toggle="collapse" data-target="#modelViews"><i class="fa fa-fw fa-table"></i> Model Views <i class="fa fa-fw fa-caret-down"></i></a>
+        <ul id="modelViews" class="collapse">
+            <li ng-repeat="view in modelViews"> <!-- toggleModelViews toggles the display of Sidebar List items -->
+                <a href ng-bind="view.title" ng-click="main.chooseView(view);main.toggleModelViews()"></a>
+            </li>
+        </ul>
+        </li>
+
+    </ul>
+</div>
