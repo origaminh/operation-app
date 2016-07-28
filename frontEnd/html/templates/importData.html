@@ -1,4 +1,4 @@
-<div class="container-fluid">
+<div class="container-fluid"  style="padding-top:20px">
   <!-- Page Heading -->
   <div class="row">
     <div class="col-lg-12">
@@ -13,66 +13,68 @@
 	    <div class="bs-example" data-example-id="basic-forms">
             <form>
                 <div class="form-group"> <label for="exampleInputEmail1">Select a List to import data into:</label> 
-                <select ng-options="list as list.Title for list in spLists" ng-model="main.selectedList" ng-change="getListFields(main.selectedList.Title)"></select>
+                <select ng-options="list as list.Title for list in spLists" ng-model="importData.selectedList" ng-change="getListFields(importData.selectedList.Title)"></select>
                 </div>
                 <div class="form-group">
-                    <label for="exampleInputFile">File input</label> 
-                    <input type="file" id="exampleInputFile"> 
+                    <label for="selectedImportFile">Input from the default 'Update Items.csv' on desktop</label> 
+                    <!-- <input type="file" id="selectedImportFile""> -->
+                    <span>C:\Users\TOPICA\Desktop\Update Items.csv</span> 
+                    <p class="help-block">Example block-level help text here.</p>
+                </div>
+                <button type="submit" class="btn btn-primary" 
+                        ng-click="importData.FromDefaultSource()">Import Data from default source
+                </button>
+                <img ng-show="importData.loading" src="../SiteAssets/assets/spinner.gif">
+                <div class="form-group" style="padding-top: 20px">
+                    <label for="selectedImportFile">File input</label> 
+                    <input type="file" id="selectedImportFile" fileread="importData.csvFile"> 
                     <p class="help-block">Example block-level help text here.</p>
                 </div>
                 <button type="submit" class="btn btn-default">Import Data</button> 
             </form>
+            <div class="row" style="padding-top:20px">
+                <div class="col col-md-3">
+                    <button class="btn btn-warning" ng-click="importData.updateToSP()">Start Updating to SharePoint</button>
+                </div>
+                <div class="col col-md-3">
+                    <button class="btn btn-danger">Another Button</button>
+                </div>
+            </div>
 	    </div>
-        
-        <div class="row no-margin list-orders" style="margin: 10px 0px 20px 0px;">
-            <table class="table table-hover table-bordered">
-                <thead>
-                    <tr style="background-color: #00B2C5; color:#fff; font-weight: 500">
-                        <td ng-repeat="field in main.selectedList.Fields | filter: showListFieldsIf">{{field.Title}}</td>
-                    </tr>
-                </thead>
+
+        <!-- Data table -->
+        <div class="table-responsive" style="padding-top:20px">
+            <table class="table table-bordered table-hover table-striped table-striped"
+                    style="min-height: 600px;">
+            <thead>
+                <tr>
+                <!--<th class="dropdown" ng-repeat="field in listFields | filter: showListFieldsIf">
+                -->
+                <th class="dropdown" ng-repeat="header in importedData.headers">
+                    <a data-toggle="dropdown" class="header-button">
+                    {{ header.Title }} <span class="caret button-caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                    <li><a href="#">Drop down option 1</a></li>
+                    <li><a href="#">Drop down option 2</a></li>
+                    <li><a href="#">Drop down option 3</a></li>
+                    </ul>
+                </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="row in importedData.rows">
+                    <td ng-repeat="field in row">
+                        <div>
+                            <span>&nbsp;&nbsp;{{ field.Value }}&nbsp;&nbsp;</span>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+
             </table>
         </div>
-
-      <!-- Data table -->
-      <div class="table-responsive">
-        <table class="table table-bordered table-hover table-striped table-striped"
-                style="min-height: 600px;">
-          <thead>
-            <tr>
-              <th class="dropdown">
-                <a data-toggle="dropdown" class="header-button">
-                  ID <span class="caret button-caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                  <li><a href="#">Drop down option 1</a></li>
-                  <li><a href="#">Drop down option 2</a></li>
-                  <li><a href="#">Drop down option 3</a></li>
-                </ul>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <!--<tr ng-repeat="row in SOMETHINGHERE"
-                title="{{(mv.dataStatus[$index] && mv.dataStatus[$index].error) ? mv.dataStatus[$index].errorMessage : ''}}">-->
-            <!-- Just using a normal <tr> tag here -->
-            <tr>
-                <td>
-                    <div>   <!-- First column is Id column -->
-                        <span>&nbsp;&nbsp;1234&nbsp;&nbsp;</span>
-                    </div>
-                </td>
-                <td ng-repeat="row in rows">
-                    <div>   <!-- All other columns -->
-                        <span>{{row[key]}}</span>
-                    </div>
-                </td>
-            </tr>
-
-          </tbody>
-
-        </table>
-      </div>
 
     </div>
   </div>

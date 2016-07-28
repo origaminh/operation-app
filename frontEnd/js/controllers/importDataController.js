@@ -1,69 +1,111 @@
 angular.module('operationApp').controller('ImportDataController', ['$routeParams','$scope','$http','$q','$timeout','dataService','utilityService',
   function($routeParams,$scope,$http,$q,$timeout,dataService,utilityService){
     //Init activities
-    var importData =  this;             // Bind controller to variable dashboard
+    var importData = this;             // Bind controller to variable dashboard
+    window.scope = $scope;
+    window.importData = this;
+
     dataService.getLists("Top").then(function(res){
-      console.log(res);
+      $scope.spLists = res.data.value
     },function(err){
       console.log(err);
     })
     
-    
-    // This is only used in for displaying up/down sorting icons and the field to sort by
-    importData.sorting = {"property":"Id","ascending":true};
-
-    
-    importData.updateNewData = function () {
-      var currentRowId = 0;
-      // Make this promise based.
-      var deferred = $q.defer();
-      makeRequest();
-
-      function makeNextRequest(){
-        currentRowId++;                         // Increment progress.
-        if (currentRowId < mv.data.length){     // Continue if there are more items.
-          makeRequest();
-        } else {
-          deferred.resolve();                   // Resolve the promise otherwise.
-        }
-      }
-      function makeRequest() {
-        var rowStatus = mv.dataStatus[currentRowId];
-        if(rowStatus && rowStatus.changed){
-          if(rowDataIsValid(currentRowId)){
-            rowStatus.updating = true;
-            var postData = mv.data[currentRowId];
-            $http({
-              method: 'PUT',
-              url: 'http://localhost:3000/api/tests',
-              data: postData
-            }).then( function (res){
-              console.log(res);
-              mv.data[currentRowId] = res.data;    // Save the result.
-              rowStatus.error = rowStatus.changed = false;
-              makeNextRequest();
-            }, function(err){
-              console.log(err);
-              rowStatus.error = true;
-              rowStatus.errorMessage = err.data.error.message;
-              deferred.reject();
-            }).finally(function(){
-              rowStatus.updating = false;
-            });
-          } else {
-            rowStatus.error = true;
-            rowStatus.errorMessage = "Invalid input value type.";
-            deferred.reject();
-          }
-
-        } else {
-          makeNextRequest()
-        }
-
-      }
-      // return a promise for the completed requests
-      return deferred.promise;
+    $scope.getListFields = function(listTitle){
+      dataService.getListFields("Top",listTitle).then(function(res){
+        $scope.listFields = res.data.value
+      },function(err){
+        console.log(err);
+      })
     }
+
+    $scope.importDataFromCSV = function(){
+      
+    }
+    
+    $scope.showListFieldsIf = function(field){
+      var notShowing = ['Content Type','Content Type ID','Attachments','Property Bag','Name','Order'];
+      if(notShowing.indexOf(field.Title) != -1){
+        return false;
+      } 
+      
+      if(field.Title == "ID" || !field.ReadOnlyField){
+        return true;
+      }
+    }
+
+    importData.updateToSP = function(siteId,listName,itemId,data,idField){
+      if(!idField){ idField = "ID"; }
+      console.log("Start updating importedData to SharePoint");
+      //Test Area
+      dataService.updateToSP
+      // ----------------------------------------
+      dataService.getDigestValue(siteId).then(function(res){
+        var requestDigest = res.data.FormDigestValue;
+        
+        // Make this promise based
+        var deferred = $q.defer();
+        makeRequest();
+        var currentRowId = 0;   // Choose starting Index to process
+        function makeNextRequest(){
+          if (currentRowId < data.length){     // Continue if there are more items.
+            makeRequest(currentRowId);
+          } else {
+            deferred.resolve();                   // Resolve the promise otherwise.
+          }
+          currentRowId++;                         // Increment progress.
+        }
+
+        function makeRequest(dataRowIndex){
+          var rowData = $scope.importedData.rows[dataRowIndex]
+          $scope.importedData.headers.forEach(function(headerObj){
+            headerObj.Title
+          });
+          dataService.getItemWithTitle("Top","NewList",1)
+          .then(function(res){
+            // ****************************
+            var etag = res.data.value[0]['odata.etag'];
+            
+
+            // ****************************
+          },function(err){
+            console.log("Failed to retrieve listItem's basic info - Id,Title")
+          });
+          makeNextRequest();
+        }
+        // ---------------------------------------
+      },function(err){
+        console.log("Failed to call contextinfo endpoint & acquire DigestValue");
+      });
+      
+    }
+
+    importData.FromDefaultSource = function(){
+      importData.loading = true;
+      // This is a jQuery operation 
+      // ---> needs to call $scope.apply() at the end
+      console.log("Begin to import data from default source.")
+      $.ajax({
+          type: "GET",
+          url: "data.csv",
+          dataType: "text",
+          success: function(data) {
+            //console.log(data);
+            $scope.importedData = processCSVData(data);
+
+          },
+          error: function(err){
+            console.log(err);
+          },
+          complete: function(res){
+            
+            importData.loading = false;
+            $scope.$apply();
+          }
+      });
+    }
+
+    
 
     $scope.keysOf = function(obj){
       return obj? Object.keys(obj) : [];
@@ -85,66 +127,41 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
   }]
 );
 
-// ------processData can be called from html event
-function processData (elem, e) {
-  //Get modelViewController as mv
-  var $scope = angular.element(elem).scope().$parent.$parent;
-  var importData = angular.element(elem).scope().$parent.$parent.importData;
-  importData.processingData = true;
-  //Get services
-  var utilityService = angular.element($("[ng-app]")[0]).injector().get('utilityService');
-  var dataService = angular.element($("[ng-app]")[0]).injector().get('dataService');
+function processCSVData(data){
+  var newLine = String.fromCharCode(10)
+  // csvData is imported as string data
+  // All the first string values are headers, ending with newLine char
 
-  //if (e && e.clipboardData && e.clipboardData.getData) {
-    // Not necessary here: Check if the current broswer support clipboar data
-    var pasteText = e.clipboardData.getData('text').trim();
-    var pasteData = utilityService.createTableFromString(pasteText);
+  var headers = []
+  var headerTitles = data.substring(0,data.indexOf(newLine)).split(",");
+  headerTitles.forEach(function(headerTitle){
+    headers.push({ Title: headerTitle });
+  });
+  
+  var rowsData = []
 
-    console.log(pasteData);
+  var rowsStringData = data.substring(data.indexOf(newLine)+1,data.length).split(newLine);
+  rowsStringData.forEach(function(rowString,rowIndex){ 
+    if (rowString !== ""){
+      // Add 1 row in rowsData
+      rowsData.push( [] );  // should have the same index as rowIndex 
+      // --> can be referenced with rowsData[rowIndex]
 
-    //RowId and ColId of paste target cell
-    var pasteColId = Number(elem.closest("[colId]").getAttribute('colId'));
-    var pasteRowId = Number(elem.closest("[rowId]").getAttribute('rowId'));
+      var fieldStringValues = rowString.split(",");
 
-    //Table last row and last column Id
-    var tableLR = Number( $("[colId][rowId]")[$("[colId][rowId]").length-1].getAttribute('rowId') );
-    var tableLC = Number( $("[colId][rowId]")[$("[colId][rowId]").length-1].getAttribute('colId') );
-
-    //Paste data last row and last column Id
-    var pasteLC = pasteColId+pasteData[0].length-1;
-    var pasteLR = pasteRowId+pasteData.length-1;
-
-
-    if ( $("[colId='"+ pasteLC +"'][rowId='"+ pasteRowId +"']").length == 0 ){
-      //Paste data's last column Id falls out of table's range
-      alert("Paste data falls out of range!");
-    } else {
-      if ( $("[colId='"+ pasteColId +"'][rowId='"+ pasteLR +"']").length == 0 ){
-        //Paste data' last row extends longer than table's range, new rows need to be added
-        for (var i = tableLR; i < pasteLR; i++){
-          mv.data.push({});
-        }
-        $scope.$apply();
-      }
-      pasteData.forEach(function(row,rowIndex){
-        row.forEach(function(cell,colIndex){
-          $("[colId='"+ (pasteColId+colIndex) +"'][rowId='"+ (pasteRowId+rowIndex) +"']")
-            .find("input,textarea").val(cell).trigger('input').trigger('blur');
+      fieldStringValues.forEach(function(fieldStringValue){
+        // Create an object in rowsData array for each fieldValue 
+        rowsData[rowIndex].push({
+          Value: fieldStringValue
         });
       });
-    };
-
-    if (e.preventDefault) {
-      e.stopPropagation();
-      e.preventDefault();
     }
-  //}
-  //else {
-  //  alert("Your browser does not support pasting content from the clipboard!");
-  //}
+    
+  });
 
-  // Done processing data, proceed to update new data
-  importData.processingData = false;
-  importData.updateNewData();
-  return false;
+  return {
+    headers: headers,
+    rows: rowsData
+  }
+
 }

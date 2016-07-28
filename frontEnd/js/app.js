@@ -23,3 +23,12 @@ angular.module('operationApp',['ngRoute','DataService','UtilityService']).config
     // configure html5 to get links working on jsfiddle
     //$locationProvider.html5Mode(true);
   });
+
+function findItemById(listItems,itemId){
+	var elementPos = listItems.map(function(x) {return x.Id; }).indexOf(itemId);
+	return listItems[elementPos];
+}
+function findItemByField(listItems,lookupValue,field){
+	var elementPos = listItems.map(function(x) {return x[field]; }).indexOf(lookupValue);
+	return listItems[elementPos];
+}

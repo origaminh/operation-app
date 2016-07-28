@@ -14,12 +14,13 @@
         </li>
 
         <li>
-        <a href="javascript:;" data-toggle="collapse" data-target="#modelViews"><i class="fa fa-fw fa-table"></i> Model Views <i class="fa fa-fw fa-caret-down"></i></a>
-        <ul id="modelViews" class="collapse">
-            <li ng-repeat="view in modelViews"> <!-- toggleModelViews toggles the display of Sidebar List items -->
-                <a href ng-bind="view.title" ng-click="main.chooseView(view);main.toggleModelViews()"></a>
-            </li>
-        </ul>
+            <a href="javascript:;" data-toggle="collapse" data-target="#modelViews"><i class="fa fa-fw fa-table"></i> Model Views <i class="fa fa-fw fa-caret-down"></i></a>
+            <!-- Examples of nested options under parent item -->
+            <!-- <ul id="modelViews" class="collapse">
+                <li ng-repeat="view in modelViews"> 
+                    <a href ng-bind="view.title" ng-click="main.chooseView(view);main.toggleModelViews()"></a>
+                </li>
+            </ul>-->
         </li>
 
     </ul>

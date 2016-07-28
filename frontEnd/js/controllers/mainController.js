@@ -37,4 +37,11 @@ angular.module('operationApp').controller('MainController', function($scope, $ro
     }
   }
 
+  main.getUrl = function(){
+
+    return "http://" +
+            window.location.hostname +
+            window.location.pathname;
+  }
+
 });
