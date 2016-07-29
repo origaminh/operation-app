@@ -56,5 +56,31 @@ angular.module('UtilityService',[]).factory('utilityService', function($http){
     }
   }*/
 
+  utilityService.convertToRichTable = function(rowsData){
+    var headers = [];
+    var rows = [];
+    rowsData.forEach(function(row,index){
+      if(index == 0){ // Header row
+          row.forEach(function(headerTitle){
+            headers.push({
+              Title: headerTitle
+            });
+          })
+      } else if(row.length == rowsData[0].length) {        
+        // Value row with a validation to ensure rowLength == headerLength
+          rows[index-1] = []  // Header row is taken out, index -1
+          row.forEach(function(fieldValue,fieldIndex){
+            rows[index-1][fieldIndex] = {
+              Value: fieldValue
+            }
+          })
+      }
+    });
+    return {
+      headers: headers,
+      rows: rows
+    }
+  }
+
   return utilityService;
 });

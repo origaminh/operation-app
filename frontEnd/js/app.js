@@ -32,3 +32,17 @@ function findItemByField(listItems,lookupValue,field){
 	var elementPos = listItems.map(function(x) {return x[field]; }).indexOf(lookupValue);
 	return listItems[elementPos];
 }
+function unify(str){
+  var newStr = "";
+  for (var i = 0, len = str.length; i < len; i++) {
+    if(str[i] && str[i].charCodeAt() != 13 ){
+      newStr = newStr+str[i];
+    }
+  }
+  return newStr;
+}
+function pad(num, size) {
+    var s = num+"";
+    while (s.length < size) s = "0" + s;
+    return s;
+}

@@ -23,11 +23,18 @@ angular.module('DataService',[]).factory('dataService', function($http){
   var normalConfig = {
       headers: { "Accept": "application/json; odata=verbose"}
   }
-  
+  dataService.getDigestValue = function(siteId){
+    var spRelativeUrl = findItemById(spSites,siteId).Value;
+    return $http({
+      method: 'POST',
+      url: spUrl+spRelativeUrl+"/_api/contextinfo",
+      config: normalConfig
+    });
+  }
 
-  //-----All fixed values have been assigned
+  //-----All fixed values and functions have been assigned
 
-  dataService.updateToSP = function(siteId,listName,itemId,data,digestValue,etag){
+  dataService.updateToSP = function(siteId,listName,digestValue,etag,data,itemId){
     // sitId,listName,itemId are for locating the itemId
     // digestValue & etag are required values for updating to SP
     var spRelativeUrl = findItemById(spSites,siteId).Value;
@@ -38,21 +45,50 @@ angular.module('DataService',[]).factory('dataService', function($http){
     });
   }
 
-  dataService.getDigestValue = function(siteId){
+  dataService.postJson = function(siteId,listName,digestValue,data,itemId){
     var spRelativeUrl = findItemById(spSites,siteId).Value;
+    var headers = {};
+    headers["Accept"] = "application/json;odata=verbose";
+    headers["Content-Type"] = "application/json;odata=verbose";
+    headers["X-RequestDigest"] = digestValue;
+    if(itemId) { // No itemId value indicates creating new List item
+      headers["X-HTTP-Method"] = "MERGE";
+      headers["If-Match"] = "*";
+    }
     return $http({
       method: 'POST',
-      url: spUrl+spRelativeUrl+"/_api/contextinfo",
-      config: normalConfig
+      url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+listName+"')/items",
+      config: {
+          headers: headers,
+      },
+      data: JSON.stringify(data)
     });
   }
 
-  dataService.getItemWithTitle = function(siteId,listName,itemId){
+  dataService.createNewListItem = function(siteId,listName,digestValue,data){
+    var spRelativeUrl = findItemById(spSites,siteId).Value;
+
+    return $http({
+      method: 'POST',
+      url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+listName+"')/items",
+      config: {
+          headers: { 
+            "Accept": "application/json;odata=verbose",
+            "Content-Type": "application/json;odata=verbose",
+            "X-RequestDigest": digestValue
+          },
+      },
+      data: JSON.stringify(data)
+    });
+  }
+
+  dataService.getItemWithTitle = function(siteId,listName,itemId,indexedField){
     var spRelativeUrl = findItemById(spSites,siteId).Value;
     return $http({
       method: 'GET',
-      url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+listName+"')/items?$select=Id,Title&$filter=Id eq " + itemId,
-
+      url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+listName+"')/items?$select=Id,Title"+
+      "&$filter="+ indexedField +" eq " + itemId,
+      config: nometadataConfig
     });
   }
 
@@ -82,6 +118,17 @@ angular.module('DataService',[]).factory('dataService', function($http){
     });
   }
   
+  dataService.getListItems = function(siteId,listTitle,minId,maxId){
+    var spRelativeUrl = findItemById(spSites,siteId).Value;
+    minId = minId ? minId : 1;
+    maxId = maxId ? maxId : 5000;
+    return $http({
+        method: 'GET',
+        url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+ listTitle +
+        "')/items?$filter=Id gt "+(minId-1)+" and Id lt "+(maxId+1)+"&$top=5000",
+        config: nometadataConfig
+    });
+  }
 
 
 
@@ -96,8 +143,3 @@ angular.module('DataService',[]).factory('dataService', function($http){
 
   return dataService;
 });
-
-function findItemById(listItems,itemId){
-	var elementPos = listItems.map(function(x) {return x.Id; }).indexOf(itemId);
-	return listItems[elementPos];
-}
