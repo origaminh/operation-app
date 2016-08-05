@@ -1,6 +1,3 @@
-/**
- * Created by Minh on 4/6/2016.
- */
 angular.module('operationApp').controller('DashboardController', function($routeParams,$scope,$http,dataService){
   //Bind controller to variable dashboard
   var dashboard = this;

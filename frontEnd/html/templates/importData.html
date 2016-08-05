@@ -67,24 +67,22 @@
                     style="min-height: 600px;">
             <thead>
                 <tr>
-                <!--<th class="dropdown" ng-repeat="field in listFields | filter: showListFieldsIf">
-                -->
-                <th class="dropdown" ng-repeat="header in importedData.headers">
-                    <a data-toggle="dropdown" class="header-button"
-                        ng-class="{ red: !header.exists }">
-                    {{ header.Title }} <span class="caret button-caret"></span>
-                    </a>
-                    <ul class="dropdown-menu">
-                    <li><a href="#">Drop down option 1</a></li>
-                    <li><a href="#">Drop down option 2</a></li>
-                    <li><a href="#">Drop down option 3</a></li>
-                    </ul>
-                </th>
+                    <th class="dropdown" ng-repeat="header in importedData.headers track by $index">
+                        <a data-toggle="dropdown" class="header-button"
+                            ng-class="{ red: !header.exists }">
+                        {{ header.Title }} <span class="caret button-caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                        <li><a href="#">Drop down option 1</a></li>
+                        <li><a href="#">Drop down option 2</a></li>
+                        <li><a href="#">Drop down option 3</a></li>
+                        </ul>
+                    </th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="row in importedData.rows">
-                    <td ng-repeat="field in row">
+                <tr ng-repeat="row in importedData.rows track by $index">
+                    <td ng-repeat="field in row track by $index">
                         <div>
                             <span>&nbsp;&nbsp;{{ field.Value }}&nbsp;&nbsp;</span>
                         </div>

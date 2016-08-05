@@ -4,9 +4,14 @@
 //moment.locale('vi');
 angular.module('operationApp',['ngRoute','DataService','UtilityService']).config(function($routeProvider, $locationProvider) {
     $routeProvider.when('/', {
-      templateUrl: 'html/templates/dashboard.html',
-      controller: 'DashboardController',
-      controllerAs: 'dashboard',
+      templateUrl: 'html/templates/home.html',
+      controller: 'HomeController',
+      controllerAs: 'home',
+      resolve: {}
+    }).when('/dashboard',{
+      templateUrl: 'html/templates/importData.html',
+      controller: 'ImportDataController',
+      controllerAs: 'importData',
       resolve: {}
     }).when('/modelview',{
       templateUrl: 'html/templates/modelView.html',
@@ -31,6 +36,20 @@ function findItemById(listItems,itemId){
 function findItemByField(listItems,lookupValue,field){
 	var elementPos = listItems.map(function(x) {return x[field]; }).indexOf(lookupValue);
 	return listItems[elementPos];
+}
+function findItemsByField(listItems,lookupParams){
+  // lookupParams is in the form of [{"Field":"ReadOnlyField","Value":false}]
+	var result = [];
+  listItems.forEach(function(item){
+    var matched = false;
+    lookupParams.forEach(function(param){
+      if(item[param.Field] == param.Value){
+        matched = true;
+      };
+    })
+    if(matched){ result.push(item); }
+  });
+	return result;
 }
 function unify(str){
   var newStr = "";

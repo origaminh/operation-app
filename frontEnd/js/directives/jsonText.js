@@ -1,6 +1,3 @@
-/**
- * Created by Minh on 4/5/2016.
- */
 angular.module('operationApp').directive('jsonText', function(){
   return {
     restrict: 'A',

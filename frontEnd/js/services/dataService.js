@@ -82,12 +82,23 @@ angular.module('DataService',[]).factory('dataService', function($http){
     });
   }
 
-  dataService.getItemWithTitle = function(siteId,listName,itemId,indexedField){
+  dataService.getRecentItems = function(siteId,listName,fields){
+    var spRelativeUrl = findItemById(spSites,siteId).Value;
+    var fieldsInUrl = fields ? fields.join(",") : "Id,Title"
+    return $http({
+      method: 'GET',
+      url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+listName+"')/items?$select="+
+      fieldsInUrl+"&$orderBy=Id desc&$top=5000",
+      config: nometadataConfig
+    });
+  }
+
+  dataService.getItemsByField = function(siteId,listName,indexedValue,indexedField){
     var spRelativeUrl = findItemById(spSites,siteId).Value;
     return $http({
       method: 'GET',
       url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+listName+"')/items?$select=Id,Title"+
-      "&$filter="+ indexedField +" eq " + itemId,
+      "&$filter="+ indexedField +" eq " + indexedValue,
       config: nometadataConfig
     });
   }

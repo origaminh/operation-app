@@ -1,0 +1,6 @@
+<div>
+    <div class="form-group">
+        <label ng-attr-for="{{fieldObj.StaticName+'Field'}}" ng-bind="fieldProperties.Title">Title</label>
+        <input type="text" class="form-control" ng-attr-id="{{fieldObj.StaticName+'Field'}}"  ng-model="fieldObj.Value" ng-change="fieldChanged()">
+    </div>
+</div>

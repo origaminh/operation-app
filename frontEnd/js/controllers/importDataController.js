@@ -102,6 +102,8 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
       } else {
         // ****** Current rule for assigning delivery information
         $scope.importedData.rows.forEach(function(row){
+          // ActivationCode
+          row[getHeaderIndex("ActivationCode")].Value = row[getHeaderIndex("ActivationCode")].Value.replace("#","");
           // Assign TrackingCodeTitle
           row[getHeaderIndex("TrackingCodeTitle")].Value = "TWLL"+pad(row[getHeaderIndex("GambitId")].Value-60,7);
           // Assign DeliveryDate
@@ -176,6 +178,7 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
             deferred.resolve();
             importData.loading = false;
             scope.$apply() 
+            console.log("Data import is completed!")
             // Deferred function ends when currentRowId has run passed length of data //             
           }
            
@@ -198,7 +201,7 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
             var oldValue = rowDataValues[headerIndex].Value;
             if (headerObj.processDateTime){         // DateTime
               if (oldValue && oldValue.length > 0){
-                $scope.processedData[rowDataIndex][headerObj.Title] = moment.utc(oldValue).format();
+                $scope.processedData[rowDataIndex][headerObj.Title] = moment(oldValue).format();
               }
             } else if (headerObj.processBoolean){   // Boolean
               if (oldValue == 'Yes'){
@@ -206,7 +209,7 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
               } else if (oldValue == 'No'){
                 $scope.processedData[rowDataIndex][headerObj.Title] = false;
               }
-            } else {
+            } else if (oldValue != "") {
               $scope.processedData[rowDataIndex][headerObj.Title] = oldValue;
             }
             
@@ -429,6 +432,8 @@ function handlePaste (elem, e) {
   var $scope = window.scope;
   var importData = window.scope.importData;
   importData.pastingData = true;
+  /*importData.loading = true;
+  $scope.$apply();*/ //Couldnt make pending gif appear
   //Get utilityService
   var utilityService = angular.element($("[ng-app]")[0]).injector().get('utilityService');
 
@@ -440,6 +445,7 @@ function handlePaste (elem, e) {
     // ***********
     importData.selectedList = null;
     $scope.importedData = utilityService.convertToRichTable(pasteData);
+    //importData.loading = false; //Couldnt make the pending gif appear
     $scope.$apply();
     
     // ***********
@@ -452,6 +458,7 @@ function handlePaste (elem, e) {
   else {// Everything else - empty editdiv and allow browser to paste content into it, then cleanup
     alert("Your browser does not support pasting content from the clipboard!");
   }
-  importData.pastingData = false;
+  
+  
   return false;
 }
