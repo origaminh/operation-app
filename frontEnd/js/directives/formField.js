@@ -1,16 +1,19 @@
 angular.module('operationApp').directive('formField', function(){
   return {
     restrict: 'A',
-    transclude: true,
-    scope: { fieldProperties: '='},
+    replace: true,
+    scope: { fieldProperties: '=' },
     templateUrl: "/frontEnd/html/directives/formField.html",
-    link: function(scope, element, attrs){
+    link: function(scope, element, attrs, ctrl){
         
-        var parentScope = angular.element( element ).scope().$parent;
-        var fieldObj = angular.element( element ).scope().fieldObj;
+        scope.displayTitle = function(){
+        	return scope.$parent.fieldObj.Title;
+        }
+        console.log(scope.fieldProperties);
+        var parentScope = angular.element( element ).scope();
+        //var home = 
         scope.fieldChanged = function(){
-            parentScope.Form[fieldObj]
-            //console.log("Hello")
+            console.log("Hello")
         }
     }
   }
