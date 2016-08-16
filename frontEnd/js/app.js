@@ -1,6 +1,3 @@
-/**
- * Created by Minh on 4/1/2016.
- */
 //moment.locale('vi');
 angular.module('operationApp',['ngRoute','DataService','UtilityService']).config(function($routeProvider, $locationProvider) {
     $routeProvider.when('/', {
@@ -9,9 +6,9 @@ angular.module('operationApp',['ngRoute','DataService','UtilityService']).config
       controllerAs: 'home',
       resolve: {}
     }).when('/dashboard',{
-      templateUrl: 'html/templates/importData.html',
-      controller: 'ImportDataController',
-      controllerAs: 'importData',
+      templateUrl: 'html/templates/dashboard.html',
+      controller: 'DashboardController',
+      controllerAs: 'dashboard',
       resolve: {}
     }).when('/modelview',{
       templateUrl: 'html/templates/modelView.html',
@@ -64,4 +61,16 @@ function pad(num, size) {
     var s = num+"";
     while (s.length < size) s = "0" + s;
     return s;
+}
+var specialChars = [{Normal:"#",UTF:"%23"},{Normal:"&",UTF:"%26"},{Normal:"'",UTF:"%27%27"},{Normal:"+",UTF:"%2B"}];
+function formatAsUri(str){
+	var processedStr = "";
+	for (var i = 0, len = str.length; i < len; i++) {
+	  if( findItemByField(specialChars,str[i],"Normal") ){
+	  	processedStr = processedStr.concat(findItemByField(specialChars,str[i],"Normal").UTF)
+	  } else {
+	  	processedStr = processedStr.concat(str[i])
+	  }
+	}
+	return processedStr;
 }

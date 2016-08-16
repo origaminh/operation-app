@@ -1,11 +1,44 @@
 <div>
+	<style>
+		.ng-empty.ng-touched {border-color: #ff5050;}
+	</style>
     <div class="form-group">
-        <label ng-attr-for="{{fieldObj.StaticName+'Field'}}">
-        	{{displayTitle()}}
+        <label>
+        	{{fieldObj.Title}}
         </label>
-        <div ng-switch="">
-            <div ng-switch-when=""></div>
+        <!--<input type="text" class="form-control"  
+        		ng-model="fieldObj.Value" ng-change="fieldChanged()">-->
+        <div ng-switch="fieldObj.TypeAsString">
+        	<div ng-switch-when="Lookup">
+        		<select ng-options="c as c.Title for c in fieldObj.Choices" ng-change="fieldChanged()"
+        				ng-model="fieldObj.LookupValue"></select>
+        	</div>	<!--  Strongly noted here that 'fieldObj.LookupValue' is formatted as '{"Id":1,"Title":"Test"}'  -->
+        	<div ng-switch-when="Choice">
+        		<select ng-options="c as c for c in fieldObj.Choices"
+        				ng-model="fieldObj.Value"></select>
+        	</div>  <!--  Different from above, this is directly binded to fieldObj.Value, a string value  -->
+        	
+        	<div ng-switch-when="Text">
+        		<input type="text" class="form-control"  
+        		ng-model="fieldObj.Value">
+        	</div>
+        	<div ng-switch-when="Note">
+        		<textarea type="text" class="form-control"
+	        	ng-model="fieldObj.Value"></textarea>
+        	</div>
+        	<div ng-switch-when="Number">
+        		<input type="number" class="form-control"  
+        		ng-model="fieldObj.Value">
+        	</div>
+        	<div ng-switch-when="Currency">
+        		<input type="number" class="form-control"  
+        		ng-model="fieldObj.Value">
+        	</div>
+        	<div ng-switch-when="DateTime"></div>
+        	<div ng-switch-chen="Boolean">
+        		<input type="checkbox" ng-model="home.Valid">
+        	</div>
         </div>
-        <input type="text" class="form-control" ng-attr-id="{{fieldObj.StaticName+'Field'}}"  ng-model="fieldObj.Value" ng-change="fieldChanged()">
+        
     </div>
 </div>

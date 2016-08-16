@@ -1,14 +1,11 @@
-/**
- * Created by Minh on 4/6/2016.
- */
 angular.module('DataService',[]).factory('dataService', function($http){
   var dataService = {};
 
   var spSites = [
-    {Id: "Top",Value:""},
-    {Id: "Marketing",Value:"/marketing"},
-    {Id: "Management",Value:"/management"},
-    {Id: "Resources",Value:"/resources"}
+    {Id: "Top",Value:"",Title:"Operation Site"},
+    {Id: "Marketing",Value:"/marketing",Title:"Marketing Site"},
+    {Id: "Management",Value:"/management",Title:"Management Site"},
+    {Id: "Resources",Value:"/resources",Title:"Resources Site"}
   ]
   var spUrl = "https://edumallinternational.sharepoint.com";
   var spMarketingUrl = "https://edumallinternational.sharepoint.com/marketing";
@@ -67,16 +64,18 @@ angular.module('DataService',[]).factory('dataService', function($http){
 
   dataService.createNewListItem = function(siteId,listName,digestValue,data){
     var spRelativeUrl = findItemById(spSites,siteId).Value;
-
+	
+	var headers = {};
+	  headers["Content-Type"] = "application/json;odata=verbose";
+	  headers["Accept"] = "application/json;odata=verbose";
+	  headers["X-RequestDigest"] = digestValue;
+	
+	
     return $http({
       method: 'POST',
       url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+listName+"')/items",
       config: {
-          headers: { 
-            "Accept": "application/json;odata=verbose",
-            "Content-Type": "application/json;odata=verbose",
-            "X-RequestDigest": digestValue
-          },
+          headers: headers ,
       },
       data: JSON.stringify(data)
     });
@@ -93,8 +92,22 @@ angular.module('DataService',[]).factory('dataService', function($http){
     });
   }
 
+  dataService.getRecentItemsByListGuid = function(siteId,listGuid,fields){
+    var spRelativeUrl = findItemById(spSites,siteId).Value;
+    var fieldsInUrl = fields ? fields.join(",") : "Id,Title"
+    return $http({
+      method: 'GET',
+      url: spUrl+spRelativeUrl+"/_api/web/lists('"+listGuid+"')/items?$select="+
+      fieldsInUrl+"&$orderBy=Id desc&$top=5000",
+      config: nometadataConfig
+    });
+  }
+
   dataService.getItemsByField = function(siteId,listName,indexedValue,indexedField){
     var spRelativeUrl = findItemById(spSites,siteId).Value;
+    if (typeof indexedValue != "number"){
+    	indexedValue = "'" + indexedValue + "'";
+    }
     return $http({
       method: 'GET',
       url: spUrl+spRelativeUrl+"/_api/web/lists/getbytitle('"+listName+"')/items?$select=Id,Title"+
@@ -104,6 +117,7 @@ angular.module('DataService',[]).factory('dataService', function($http){
   }
 
   dataService.getLists = function(siteId){
+  	if (!findItemById(spSites,siteId)){ debugger }
     var spRelativeUrl = findItemById(spSites,siteId).Value;
     return $http({
         method: 'GET',

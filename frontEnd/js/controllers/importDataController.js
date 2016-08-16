@@ -5,22 +5,31 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
     window.scope = $scope;
     window.importData = this;
     importData.currentDeliveryDate = moment().startOf('day')._d;
+    $scope.spSites = [	{Id: "Top",Value:"",Title:"Operation Site"},
+    					{Id: "Marketing",Value:"/marketing",Title:"Marketing Site"}
+    				];
+    importData.selectedSite = $scope.spSites[0];	// Set default site to Top level site
 
-    dataService.getLists("Top").then(function(res){
-      $scope.spLists = res.data.value;
-    },function(err){
-      console.log(err);
-    })
+    
 
     dataService.getListItems("Top","ServiceCodes").then(function(res){
       $scope.serviceCodes = res.data.value;
     },function(err){
       console.log(err);
-    })
+    });
     
+    //ng-change // Get Lists of newly selected Site
+    $scope.getListsOfSite = function(siteId){
+    	dataService.getLists(siteId).then(function(res){
+	      $scope.spLists = res.data.value;
+	    },function(err){
+	      console.log(err);
+	    })
+    }
+    $scope.getListsOfSite(importData.selectedSite.Id);
     //********ng-change // Get List Fields of newly selected List
     $scope.getListFields = function(listTitle){
-      dataService.getListFields("Top",listTitle).then(function(res){
+      dataService.getListFields(importData.selectedSite.Id,listTitle).then(function(res){
         $scope.listFields = res.data.value;
         
         $scope.missingFields = [];
@@ -136,7 +145,7 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
     }
 
     // ng-click // Start sending data from the displayed data ($scope.importedData) to SharePoint
-    importData.startSending = function(siteId,listName,indexedField){
+    importData.startSending = function(siteId){	// List information is referenced from importData.selectedList
       var batchDelayTime;
       do {
         batchDelayTime = prompt("Please enter the delay time (in seconds) between each batch of 30 items.");
@@ -145,8 +154,6 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
       
       // ------Empty the resulted/processed array every time raw data is imported------
       $scope.processedData = [];
-      if(!indexedField){ 
-        indexedField = "Id"; }
       console.log("Start updating $scope.importedData to SharePoint");
       // ----------------------------------------
       dataService.getDigestValue(siteId).then(function(res){
@@ -167,12 +174,12 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
                 if (currentRowId && currentRowId % 30 == 0){
                   console.log("Waiting "+batchDelayTime+" sec every 30 items.")
                   setTimeout(function(){  // setTimeout to avoid too heavy of an import load
-                    makeRequest(currentRowId);
-                  },batchDelayTime*1000);
-                } else {
-                  makeRequest(currentRowId);
-                }
-            //-----------------------------//
+                    makeRequest(currentRowId);											//------------
+                  },batchDelayTime*1000);												//------------
+                } else {																//------------
+                  makeRequest(currentRowId);	// Make sure this if always ends up running makeRequest //
+                }								//------------
+            //-----------------------------------//
           } else {
             // Resolve the promise otherwise.//
             deferred.resolve();
@@ -189,6 +196,10 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
         function makeRequest(rowDataIndex){
           // Define the location of Row with inherited index
           var rowDataValues = $scope.importedData.rows[rowDataIndex]
+          if(!rowDataValues ){
+          	makeNextRequest();
+          	return false;
+          }
           // Define the format of $scope.processedData as
           //  [obj, {
           //    Value: *someStringValue* 
@@ -215,25 +226,38 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
             
             
           }); // *****************************
-          // Aded metadata 
+          // Adding metadata 
           $scope.processedData[rowDataIndex]['__metadata'] = { 
             "type": importData.selectedList.ListItemEntityTypeFullName 
           };
-          //--------------------------
+          /*--------------------------Angular solution, not working
+          // Send POST request to Create new item for the selected list
           //dataService.createNewListItem(siteId,listName,digestValue,$scope.processedData[rowDataIndex])
-          
-          //dataService.postJson(siteId,listName,digestValue,$scope.processedData[rowDataIndex])
+          dataService.createNewListItem( importData.selectedSite.Id,
+          								 importData.selectedList.Title,
+          								 digestValue,
+          								 $scope.processedData[rowDataIndex] ).then(function(res){
 
-          var headers = {};
+            // Check whether the selectedList needs further actions performed
+              debugger;
+              var UtmCampaignValue = res.d.UtmCampaignValue;
+              var UtmMediumValue = res.d.UtmMediumValue;
+              
+              //----------------
+              makeNextRequest();
+
+		 },function(err){
+		 	console.log(err);
+		 	deferred.resolve();
+		 });*/
+		 // jQuery solution --- needs to be optimized**********
+		 var headers = {};
           headers["Accept"] = "application/json;odata=verbose";
           headers["X-RequestDigest"] = digestValue;
-          /*if(isUpdate) {
-            headers["X-HTTP-Method"] = "MERGE";
-            headers["If-Match"] = "*";
-          }*/
           
-          $.ajax({       
-            url: "https://edumallinternational.sharepoint.com/_api/web/lists/GetByTitle('"+importData.selectedList.Title+"')/items",   
+          $.ajax({
+            url: "https://edumallinternational.sharepoint.com"+importData.selectedSite.Value+
+            	"/_api/web/lists/GetByTitle('"+importData.selectedList.Title+"')/items",   
             type: "POST",
             processData: false,  
             data: JSON.stringify($scope.processedData[rowDataIndex]),
@@ -241,6 +265,68 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
             headers: headers, 
             success: function(res){ 
               //console.log(res);
+              // Check whether the selectedList needs further actions performed
+              
+              if (res.d.__metadata.type == "SP.Data.C3sListItem"){
+              	
+              	// Format C3 Workflow
+              	// ************
+              	// ************
+              	  //debugger;
+              	  var campaignId, advertisementId;
+              	  var itemId = String(res.d.Id);
+              	  var UtmCampaignValue = res.d.UtmCampaignValue;	// UtmCampaign ~ Campaign field
+              	  var UtmMediumValue = res.d.UtmMediumValue;		// UtmMedium ~ Advertisement field
+              	  convertValueToLookup(      "Marketing","C3s"  ,itemId,UtmCampaignValue,"CampaignId","Campaigns","Title");
+              	  convertValueToLookup(      "Marketing","C3s"  ,itemId,UtmMediumValue,"AdvertisementId","Advertisements","Title");
+              	  
+              	  function convertValueToLookup(siteId,listTitle,itemId,LookupValue,LookupField,TarListTitle,TarListField) {
+              	  		var targetItemId;
+              	  		dataService.getItemsByField(siteId,TarListTitle,formatAsUri(LookupValue),TarListField)//Check the Target List
+		              	  .then(function(res){								// -------- LookupValue needs to be formatted as uri
+		              	  	if( res.data.value.length != 0 ){				// if there's an item with this Target Field's value
+		              	  		targetItemId = String(res.data.value[0].Id);//then set targetItemId to the queried item's Id
+		              	  		//**************************
+		              	  		// Found existing Target List item with TarListField : LookupValue --> update current item with targetItemId
+		              	  		var data1 = {};
+		              	  		data1[LookupField] = targetItemId;
+		              	  		updateListItem(headers, data1 ,itemId,listTitle,siteId);
+		              	  		//-----------------
+		              	  	} else {
+		              	  		// Create a new item in Target List and assign newly generated Id to targetItemId
+		              	  		// *************************
+		              	  		var data2 = {};
+		              	  		data2[TarListField] = LookupValue;
+		              	  		data2 = addMetadataTo( data2 ,TarListTitle);
+		              	  		$.ajax({
+		              	  			url: "https://edumallinternational.sharepoint.com/"+siteId+
+						            	 "/_api/web/lists/GetByTitle('"+TarListTitle+"')/items",   
+						            type: "POST",
+						            processData: false,  
+						            data: JSON.stringify( data2 ),
+						            contentType: "application/json;odata=verbose",
+						            headers: headers,
+						            success: function(res){
+					            		targetItemId = String(res.d.Id)
+						            	//*******
+						            	var data3 = {};
+				              	  		data3[LookupField] = targetItemId;
+				              	  		updateListItem(headers, data3 ,itemId,listTitle,siteId);
+						            	//*******************
+						            },
+						            error: function(err){
+						            	console.log(err);
+						            }
+		              	  		});              	  	}
+		              	  },function(err){
+		              	  	console.log(err)
+		              	  });
+              	  }              	  
+              	  
+              	  
+	              
+              }
+              
               makeNextRequest(); 
             },
             error: function(res){ 
@@ -248,8 +334,9 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
               deferred.resolve();
             }
           });
-          
-        }
+          // **************************************************
+                    
+        }  //----------End of makeRequest function
         // ---------------------------------------
       },function(err){
         console.log("Failed to call contextinfo endpoint & acquire DigestValue");
@@ -462,3 +549,33 @@ function handlePaste (elem, e) {
   
   return false;
 }
+
+function updateListItem(headers,updateData,itemId,listTitle,siteId){
+              	  			// headers already contain digestValue
+              	  			var newHeaders = $.extend({},headers);	// new Header for the action of updating item
+	              	  		newHeaders["X-HTTP-Method"] = "MERGE";
+	            			newHeaders["If-Match"] = "*";
+	            			// metadata for C3s
+	            			updateData["__metadata"] = { "type": "SP.Data."+listTitle+"ListItem" };
+	              	  		$.ajax({
+	              	  			url: "https://edumallinternational.sharepoint.com/"+siteId+
+					            	"/_api/web/lists/GetByTitle('"+listTitle+"')/items("+itemId+")",   
+					            type: "POST",
+					            processData: false,  
+					            data: JSON.stringify(updateData),
+					            contentType: "application/json;odata=verbose",
+					            headers: newHeaders,
+					            success: function(res){
+					            	//console.log(res);
+					            },
+					            error: function(err){
+					            	console.log(err);
+					            }
+	              	  		});
+              	  		}
+              	  		
+function addMetadataTo(data,ListTitle){
+		              	  			data["__metadata"] = { "type": "SP.Data."+ListTitle+"ListItem" };
+		              	  			return data;
+		              	  		}
+		              	  		

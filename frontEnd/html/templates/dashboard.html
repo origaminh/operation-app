@@ -1,6 +1,3 @@
-abc<br>
-controller: {{name}}<br />
-Book Id: {{params.bookId}}<br />
 <div class="container-fluid">
   <!-- Page Heading -->
   <div class="row">
@@ -14,7 +11,31 @@ Book Id: {{params.bookId}}<br />
         </li>
       </ol>
 
-      JSON Text:
+	  <div class="table-responsive">
+        <table class="table table-bordered table-hover table-striped">
+          <thead>
+            <tr>
+              <th>id</th>
+              <td>title</td>
+              <th>amount</th>
+              <th>array</th>
+              <th>object</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="row in home.tableRows">
+              <td>{{row.id}}</td>
+              <td>{{row.title}}</td>
+              <td>{{row.amount}}</td>
+              <td>{{row.array}}</td>
+              <td>{{row.object}}</td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+	  
+      <!-- JSON Text:
       <textarea json-text ng-model='dashboard.tableRows[2].object' rows="2"></textarea>
 
       <div class="table-responsive">
@@ -39,11 +60,10 @@ Book Id: {{params.bookId}}<br />
           </tbody>
 
         </table>
-      </div>
+      </div>-->
 
     </div>
   </div>
   <!-- /.row -->
 </div>
 <!-- /.container-fluid -->
-

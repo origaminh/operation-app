@@ -32,6 +32,15 @@
                     ng-click="importData.FromSelectedCSV()">
                     Import Data from selected csv file </button>
                 <div class="form-group" style="padding-top:20px">
+                    <label for="siteSelect">Select a Site:</label>
+                    <select id="siteSelect" class="form-control"
+                        ng-options="site as site.Title for site in spSites" 
+                        ng-model="importData.selectedSite"
+                        ng-change="getListsOfSite(importData.selectedSite.Id)"
+                        ng-init="importData.selectedSite=spSites[0]">
+                    </select>
+                </div>
+                <div class="form-group" style="padding-top:20px">
                     <label for="listSelect">Select a List to import data into:</label>
                     <select id="listSelect" class="form-control"
                         ng-options="list as list.Title for list in spLists" 
@@ -39,14 +48,14 @@
                         ng-change="getListFields(importData.selectedList.Title)"
                         ng-disabled="!importedData" >
                     </select>
-                </div> 
+                </div>
             </form>
             <br>
             <div class="row" style="padding-top:20px">
                 <div class="col col-md-4">
                     <button class="btn btn-warning" 
                     ng-disabled="!importData.selectedList || (missingFields.length && missingFields.length > 0) || hasInvalidHeader()"
-                    ng-click="importData.startSending('Top','NewList','ListId')">
+                    ng-click="importData.startSending(importData.selectedSite.Id)">
                     Start Sending to SP</button>
                     <span class="red" ng-show="missingFields.length > 0" ng-bind="showMissingFields()+ ' missing'" ></span>
                 </div>
