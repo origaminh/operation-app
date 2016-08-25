@@ -11,7 +11,7 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
     importData.selectedSite = $scope.spSites[0];	// Set default site to Top level site
 
     
-
+    // Lấy ra các loại Service Code (dịch vụ chuyển phát) để xếp vận đơn
     dataService.getListItems("Top","ServiceCodes").then(function(res){
       $scope.serviceCodes = res.data.value;
     },function(err){
@@ -83,7 +83,8 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
         console.log(err);
       })
     }
-
+ 
+    // Tính Estimated Date cho vận đơn COD khi chọn dịch vụ chuyển phát 
     $scope.getEstimatedDate = function(fromDate,days,workSat,workSun){
       var a = moment(fromDate).add(1,'days').startOf('day');  // Doesnt count start date
       var b = moment(fromDate).add(days,'days').endOf('day');
@@ -264,9 +265,13 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
             contentType: "application/json;odata=verbose",
             headers: headers, 
             success: function(res){ 
+              // Gọi tiếp makeNextRequest để loop callback
+              makeNextRequest();
+
               //console.log(res);
-              // Check whether the selectedList needs further actions performed
               
+              // Check whether the selectedList needs further actions performed
+              // Làm thao tác giống workflow
               if (res.d.__metadata.type == "SP.Data.C3sListItem"){
               	
               	// Format C3 Workflow
@@ -279,55 +284,52 @@ angular.module('operationApp').controller('ImportDataController', ['$routeParams
               	  var UtmMediumValue = res.d.UtmMediumValue;		// UtmMedium ~ Advertisement field
               	  convertValueToLookup(      "Marketing","C3s"  ,itemId,UtmCampaignValue,"CampaignId","Campaigns","Title");
               	  convertValueToLookup(      "Marketing","C3s"  ,itemId,UtmMediumValue,"AdvertisementId","Advertisements","Title");
-              	  
-              	  function convertValueToLookup(siteId,listTitle,itemId,LookupValue,LookupField,TarListTitle,TarListField) {
-              	  		var targetItemId;
-              	  		dataService.getItemsByField(siteId,TarListTitle,formatAsUri(LookupValue),TarListField)//Check the Target List
-		              	  .then(function(res){								// -------- LookupValue needs to be formatted as uri
-		              	  	if( res.data.value.length != 0 ){				// if there's an item with this Target Field's value
-		              	  		targetItemId = String(res.data.value[0].Id);//then set targetItemId to the queried item's Id
-		              	  		//**************************
-		              	  		// Found existing Target List item with TarListField : LookupValue --> update current item with targetItemId
-		              	  		var data1 = {};
-		              	  		data1[LookupField] = targetItemId;
-		              	  		updateListItem(headers, data1 ,itemId,listTitle,siteId);
-		              	  		//-----------------
-		              	  	} else {
-		              	  		// Create a new item in Target List and assign newly generated Id to targetItemId
-		              	  		// *************************
-		              	  		var data2 = {};
-		              	  		data2[TarListField] = LookupValue;
-		              	  		data2 = addMetadataTo( data2 ,TarListTitle);
-		              	  		$.ajax({
-		              	  			url: "https://edumallinternational.sharepoint.com/"+siteId+
-						            	 "/_api/web/lists/GetByTitle('"+TarListTitle+"')/items",   
-						            type: "POST",
-						            processData: false,  
-						            data: JSON.stringify( data2 ),
-						            contentType: "application/json;odata=verbose",
-						            headers: headers,
-						            success: function(res){
-					            		targetItemId = String(res.d.Id)
-						            	//*******
-						            	var data3 = {};
-				              	  		data3[LookupField] = targetItemId;
-				              	  		updateListItem(headers, data3 ,itemId,listTitle,siteId);
-						            	//*******************
-						            },
-						            error: function(err){
-						            	console.log(err);
-						            }
-		              	  		});              	  	}
-		              	  },function(err){
-		              	  	console.log(err)
-		              	  });
-              	  }              	  
-              	  
-              	  
 	              
               }
+
+              function convertValueToLookup(siteId,listTitle,itemId,LookupValue,LookupField,TarListTitle,TarListField) {
+                  var targetItemId;
+                  dataService.getItemsByField(siteId,TarListTitle,formatAsUri(LookupValue),TarListField)//Check the Target List
+                  .then(function(res){								// -------- LookupValue needs to be formatted as uri
+                    if( res.data.value.length != 0 ){				// if there's an item with this Target Field's value
+                      targetItemId = String(res.data.value[0].Id);//then set targetItemId to the queried item's Id
+                      //**************************
+                      // Found existing Target List item with TarListField : LookupValue --> update current item with targetItemId
+                      var data1 = {};
+                      data1[LookupField] = targetItemId;
+                      updateListItem(headers, data1 ,itemId,listTitle,siteId);
+                      //-----------------
+                    } else {
+                      // Create a new item in Target List and assign newly generated Id to targetItemId
+                      // *************************
+                      var data2 = {};
+                      data2[TarListField] = LookupValue;
+                      data2 = addMetadataTo( data2 ,TarListTitle);
+                      $.ajax({
+                        url: "https://edumallinternational.sharepoint.com/"+siteId+
+                        "/_api/web/lists/GetByTitle('"+TarListTitle+"')/items",   
+                    type: "POST",
+                    processData: false,  
+                    data: JSON.stringify( data2 ),
+                    contentType: "application/json;odata=verbose",
+                    headers: headers,
+                    success: function(res){
+                      targetItemId = String(res.d.Id)
+                      //*******
+                      var data3 = {};
+                          data3[LookupField] = targetItemId;
+                          updateListItem(headers, data3 ,itemId,listTitle,siteId);
+                      //*******************
+                    },
+                    error: function(err){
+                      console.log(err);
+                    }
+                      });              	  	}
+                  },function(err){
+                    console.log(err)
+                  });
+              }
               
-              makeNextRequest(); 
             },
             error: function(res){ 
               console.log(res);

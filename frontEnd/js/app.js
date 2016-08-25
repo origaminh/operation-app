@@ -35,7 +35,7 @@ function findItemByField(listItems,lookupValue,field){
 	return listItems[elementPos];
 }
 function findItemsByField(listItems,lookupParams){
-  // lookupParams is in the form of [{"Field":"ReadOnlyField","Value":false}]
+  // lookupParams is in the form of [{"Field":"testValue","Value":false}]
 	var result = [];
   listItems.forEach(function(item){
     var matched = false;
