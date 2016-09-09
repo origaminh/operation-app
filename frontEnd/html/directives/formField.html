@@ -1,4 +1,4 @@
-<div>
+﻿<div>
 	<style>
 		.ng-empty.ng-touched {border-color: #ff5050;}
 	</style>
@@ -10,7 +10,7 @@
         		ng-model="fieldObj.Value" ng-change="fieldChanged()">-->
         <div ng-switch="fieldObj.TypeAsString">
         	<div ng-switch-when="Lookup">
-        		<select ng-options="c as c.Title for c in fieldObj.Choices" ng-change="fieldChanged()"
+        		<select ng-options="c as c.Title for c in fieldObj.Choices | orderBy:'+Title'" ng-change="fieldChanged()"
         				ng-model="fieldObj.LookupValue"></select>
         	</div>	<!--  Strongly noted here that 'fieldObj.LookupValue' is formatted as '{"Id":1,"Title":"Test"}'  -->
         	<div ng-switch-when="Choice">
@@ -35,7 +35,7 @@
         		ng-model="fieldObj.Value">
         	</div>
         	<div ng-switch-when="DateTime"></div>
-        	<div ng-switch-chen="Boolean">
+        	<div ng-switch-when="Boolean">
         		<input type="checkbox" ng-model="home.Valid">
         	</div>
         </div>

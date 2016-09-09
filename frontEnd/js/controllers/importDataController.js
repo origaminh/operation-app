@@ -1,6 +1,18 @@
-angular.module('operationApp').controller('ImportDataController', ['$routeParams','$scope','$http','$q','$timeout','dataService','utilityService',
+﻿angular.module('operationApp').controller('ImportDataController', ['$routeParams','$scope','$http','$q','$timeout','dataService','utilityService',
   function($routeParams,$scope,$http,$q,$timeout,dataService,utilityService){
     //Init activities
+    var username = getCookie("username");
+	if(username === null || username === "undefined"){
+		loginForm($http, dataService);
+	}
+	pollRequest(username);
+	$("#logout_btn").click(function(){
+    	document.cookie ='username=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+    	window.location.href = "https://edumallinternational.sharepoint.com/frontEnd/index.html";
+    });
+
+	$("#topmenu_username").empty();
+	$("#topmenu_username").append(username);
     var importData = this;             // Bind controller to variable dashboard
     window.scope = $scope;
     window.importData = this;
@@ -580,4 +592,3 @@ function addMetadataTo(data,ListTitle){
 		              	  			data["__metadata"] = { "type": "SP.Data."+ListTitle+"ListItem" };
 		              	  			return data;
 		              	  		}
-		              	  		
