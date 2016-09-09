@@ -1,0 +1,15 @@
+﻿#popup_login_form{
+    width: 100%;
+    height: 100%;
+}
+#layout_main_login{
+	overflow:hidden;
+}
+
+#popup_register_form{
+    width: 100%;
+    height: 100%;
+}
+#layout_main_register{
+	overflow:hidden;
+}

@@ -5,7 +5,10 @@ angular.module('operationApp').controller('MainController', function($scope, $ro
   $scope.$route = $route;
   $scope.$location = $location;
   $scope.$routeParams = $routeParams;
-
+	$("#logout_btn").click(function(){
+    	document.cookie ='username=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+    	window.location.href = "https://edumallinternational.sharepoint.com/frontEnd/index.html";
+    });
   //Load all defined model views
   $http({
     method: 'GET',
